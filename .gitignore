@@ -1,0 +1,14 @@
+# Visual Studio Code
+.vscode/
+
+# Visual Studio
+.vs/
+
+# Node.js dependencies
+node_modules/
+
+# Logs
+*.log
+
+# macOS files
+.DS_Store
