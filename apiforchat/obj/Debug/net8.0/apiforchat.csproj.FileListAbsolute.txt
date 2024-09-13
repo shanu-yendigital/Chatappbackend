@@ -148,3 +148,4 @@ D:\Chatapp\apiforchat\apiforchat\bin\Debug\net8.0\runtimes\linux\native\libmongo
 D:\Chatapp\apiforchat\apiforchat\bin\Debug\net8.0\runtimes\osx\native\libmongocrypt.dylib
 D:\Chatapp\apiforchat\apiforchat\bin\Debug\net8.0\runtimes\win\native\mongocrypt.dll
 D:\Chatapp\apiforchat\apiforchat\bin\Debug\net8.0\BCrypt.Net-Next.dll
+D:\Chatapp\apiforchat\apiforchat\obj\Debug\net8.0\apiforchat.sourcelink.json

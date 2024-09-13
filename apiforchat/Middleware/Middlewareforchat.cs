@@ -9,6 +9,7 @@ public class MiddlewareforChat
     private readonly RequestDelegate _next;
     private readonly WebSocketManager _webSocketManager;
     private readonly ILogger<MiddlewareforChat> _logger;
+  
 
     public MiddlewareforChat(RequestDelegate next, WebSocketManager webSocketManager, ILogger<MiddlewareforChat> logger)
     {
@@ -47,6 +48,7 @@ public class MiddlewareforChat
 }
 public class WebSocketManager
 {
+    private readonly Dictionary<string, WebSocket> _userSocketMap = new Dictionary<string, WebSocket>();
     private readonly List<WebSocket> _sockets = new List<WebSocket>(); // List of active WebSockets conn
     private readonly Dictionary<WebSocket, string> _socketUserMap = new Dictionary<WebSocket, string>();
     private readonly ILogger<WebSocketManager> _logger;
@@ -63,12 +65,12 @@ public class WebSocketManager
         _socketUserMap[socket] = userId;  // Map socket to the userID
 
         _logger.LogInformation("Total active WebSocket connections: {Count}", _sockets.Count);
-        await Receive(socket); 
+        await Receive(socket);
     }
 
     public async Task RemoveSocket(WebSocket socket)
     {
-       
+
         _sockets.Remove(socket);
         _socketUserMap.Remove(socket);
         await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Closed by the WebSocketManager", CancellationToken.None);
@@ -87,7 +89,7 @@ public class WebSocketManager
             //received message
             _logger.LogInformation($"Message received: {message}");
 
-            await BroadcastMessage(socket, message);
+            //  await BroadcastMessage(socket, message);
 
             result = await socket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
         }
@@ -95,23 +97,53 @@ public class WebSocketManager
         _logger.LogInformation($"WebSocket connection closed for user: {_socketUserMap[socket]} with status: {result.CloseStatus}");
         await RemoveSocket(socket);
     }
-    private async Task BroadcastMessage(WebSocket senderSocket, string message)
+    //private async Task BroadcastMessage(WebSocket senderSocket, string message)
+    //{
+    //    var senderId = _socketUserMap[senderSocket];
+    //    var formattedMessage = $"{senderId}: {message}";
+
+    //    _logger.LogInformation("Broadcasting message from user: {UserId} to all other connected users.", senderId);
+
+    //    var buffer = Encoding.UTF8.GetBytes(formattedMessage);
+
+    //    foreach (var socket in _sockets)
+    //    {
+    //        if (socket.State == WebSocketState.Open && socket != senderSocket)
+    //        {
+    //            _logger.LogInformation("Sending message to user: {UserId}", _socketUserMap[socket]);
+    //            await socket.SendAsync(new ArraySegment<byte>(buffer, 0, buffer.Length), WebSocketMessageType.Text, true, CancellationToken.None);
+
+    //        }
+    //    }
+    //}
+
+    private async Task SendMessageToUser(WebSocket senderSocket, string targetUserId, string message)
     {
         var senderId = _socketUserMap[senderSocket];
-        var formattedMessage = $"{senderId}: {message}";
+        var formattedMessage = $"{senderId}:{message}";
+        _logger.LogInformation("Sending message from user: {SenderId} to user: {TargetUserId}", senderId, targetUserId);
 
-        _logger.LogInformation("Broadcasting message from user: {UserId} to all other connected users.", senderId);
-
-        var buffer = Encoding.UTF8.GetBytes(formattedMessage);
-
-        foreach (var socket in _sockets)
+        if (_userSocketMap.ContainsKey(targetUserId))
         {
-            if (socket.State == WebSocketState.Open && socket != senderSocket)
+            var targetSocket = _userSocketMap[targetUserId];
+            if (targetSocket.State == WebSocketState.Open)
             {
-                _logger.LogInformation("Sending message to user: {UserId}", _socketUserMap[socket]);
-                await socket.SendAsync(new ArraySegment<byte>(buffer, 0, buffer.Length), WebSocketMessageType.Text, true, CancellationToken.None);
-
+                var buffer = Encoding.UTF8.GetBytes(formattedMessage);
+                await targetSocket.SendAsync(new ArraySegment<byte>(buffer, 0, buffer.Length), 
+                                              WebSocketMessageType.Text, 
+                                              true, 
+                                              CancellationToken.None);
+            }
+            else
+            {
+                _logger.LogWarning("Target WebSocket for user: {TargetUserId} is not open.", targetUserId);
             }
         }
+        else
+        {
+            _logger.LogWarning("User: {TargetUserId} is not connected.", targetUserId);
+        }
     }
+
+    
 }
