@@ -160,5 +160,6 @@ namespace apiforchat.Controllers
                 return StatusCode(500, "An error occurred while fetching users.");
             }
         }
+        
     }
 }

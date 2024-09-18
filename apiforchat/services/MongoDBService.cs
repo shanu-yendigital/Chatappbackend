@@ -25,11 +25,6 @@ namespace apiforchat.services
 
             var mongoDBSettings = settings.Value;
 
-            // Log the configuration values to verify they are loaded correctly
-            //logger.LogInformation("MongoDB ConnectionString: {ConnectionString}", mongoDBSettings.ConnectionString);
-            //logger.LogInformation("MongoDB DatabaseName: {DatabaseName}", mongoDBSettings.DatabaseName);
-            //logger.LogInformation("MongoDB UsersCollectionName: {UsersCollectionName}", mongoDBSettings.UsersCollectionName);
-            //Console.WriteLine(mongoDBSettings);
             try
             {
                 var client = new MongoClient(mongoDBSettings.ConnectionString);
@@ -79,7 +74,7 @@ namespace apiforchat.services
             // Convert the string userId to ObjectId
             if (!ObjectId.TryParse(userId, out var objectId))
             {
-                return null; // Or handle invalid ObjectId format
+                return null; 
             }
 
             return await _users.Find(u => u.Id == objectId).FirstOrDefaultAsync();
